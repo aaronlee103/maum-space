@@ -98,11 +98,18 @@ export default function Home() {
           </div>
         </main>
 
-        <footer style={{ padding: '24px 48px', borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#999' }}>Maum.space</span>
-          <span style={{ fontSize: '11px', color: '#999' }}>© 2026 Maum Concierge</span>
-          <a href="/contact" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>문의하기</a>
-        </footer>
+        <footer style={{ padding: '32px 48px', borderTop: '1px solid #f0f0f0', background: '#fafaf8' }}>
+        <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            <a href="/about" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>About</a>
+            <a href="/how-it-works" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>이용 방법</a>
+            <a href="/terms" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>이용약관</a>
+            <a href="/privacy" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>개인정보처리방침</a>
+            <a href="/contact" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>문의하기</a>
+          </div>
+          <span style={{ fontSize: '11px', color: '#bbb' }}>© 2026 Maum Concierge</span>
+        </div>
+      </footer>
       </div>
     </>
   );
