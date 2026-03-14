@@ -15,7 +15,10 @@ export default function MyPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.replace('/login?redirect=/mypage'); return; }
+      if (!user) {
+        router.replace('/login?redirect=/mypage');
+        return;
+      }
       setUser(user);
       supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
         if (data) setProfile({ name: data.name || '', email: data.email || user.email || '', phone: data.phone || '', postcode: data.postcode || '', address: data.address || '', address_detail: data.address_detail || '' });
@@ -62,27 +65,32 @@ export default function MyPage() {
   const inputStyle = { width: '100%', padding: '10px 0', fontSize: '14px', border: 'none', borderBottom: '1px solid #ddd', outline: 'none', background: 'transparent', boxSizing: 'border-box' };
   const labelStyle = { fontSize: '11px', letterSpacing: '.1em', color: '#999', textTransform: 'uppercase', display: 'block', marginBottom: '4px' };
 
-  if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#999' }}>\uB85C\uB529 \uC911...</p></div>;
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#999' }}>로딩 중...</p>
+    </div>
+  );
 
   return (
     <>
-      <Head><title>\uB9C8\uC774\uD398\uC774\uC9C0 \u2014 Maum</title></Head>
+      <Head><title>마이페이지 — Maum</title></Head>
       <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', padding: '60px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
             <div>
-              <h1 style={{ fontSize: '22px', fontWeight: 300, letterSpacing: '.15em', marginBottom: '4px' }}>Maum</h1>
-              <p style={{ fontSize: '12px', color: '#999' }}>\uB9C8\uC774\uD398\uC774\uC9C0</p>
+              <h1 style={{ fontSize: '22px', fontWeight: 300, letterSpacing: '.15em', marginBottom: '4px' }}>
+                <a href="/" style={{ textDecoration: 'none', color: '#1a1a1a' }}>Maum</a>
+              </h1>
+              <p style={{ fontSize: '12px', color: '#999' }}>마이페이지</p>
             </div>
             <button onClick={handleLogout} style={{ fontSize: '12px', color: '#999', background: 'none', border: '1px solid #ddd', padding: '8px 16px', cursor: 'pointer', letterSpacing: '.05em' }}>
-              \uB85C\uADF8\uC544\uC6C3
+              로그아웃
             </button>
           </div>
 
           <div style={{ display: 'flex', gap: '0', marginBottom: '40px', borderBottom: '1px solid #eee' }}>
-            {[['profile', '\uD504\uB85C\uD544'], ['orders', '\uC8FC\uBB38 \uB0B4\uC5ED']].map(([key, label]) => (
-              <button key={key} onClick={() => setTab(key)}
-                style={{ padding: '12px 24px', background: 'none', border: 'none', borderBottom: tab === key ? '2px solid #1a1a1a' : '2px solid transparent', fontSize: '13px', color: tab === key ? '#1a1a1a' : '#999', cursor: 'pointer', letterSpacing: '.05em', marginBottom: '-1px' }}>
+            {[['profile', '프로필'], ['orders', '주문 내역']].map(([key, label]) => (
+              <button key={key} onClick={() => setTab(key)} style={{ padding: '12px 24px', background: 'none', border: 'none', borderBottom: tab === key ? '2px solid #1a1a1a' : '2px solid transparent', fontSize: '13px', color: tab === key ? '#1a1a1a' : '#999', cursor: 'pointer', letterSpacing: '.05em', marginBottom: '-1px' }}>
                 {label}
               </button>
             ))}
@@ -92,32 +100,31 @@ export default function MyPage() {
             <form onSubmit={handleSave}>
               <div style={{ display: 'grid', gap: '24px' }}>
                 <div>
-                  <label style={labelStyle}>\uC774\uB984</label>
+                  <label style={labelStyle}>이름</label>
                   <input name="name" value={profile.name} onChange={handleChange} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>\uC774\uBA54\uC77C</label>
+                  <label style={labelStyle}>이메일</label>
                   <input name="email" value={profile.email} onChange={handleChange} style={{ ...inputStyle, color: '#999' }} disabled />
                 </div>
                 <div>
-                  <label style={labelStyle}>\uC5F0\uB77D\uCC98</label>
+                  <label style={labelStyle}>연락처</label>
                   <input name="phone" value={profile.phone} onChange={handleChange} style={inputStyle} placeholder="010-0000-0000" />
                 </div>
                 <div>
-                  <label style={labelStyle}>\uC8FC\uC18C</label>
+                  <label style={labelStyle}>주소</label>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                    <input name="postcode" value={profile.postcode} onChange={handleChange} style={{ ...inputStyle, width: '120px' }} placeholder="\uC6B0\uD3B8\uBC88\uD638" readOnly />
+                    <input name="postcode" value={profile.postcode} onChange={handleChange} style={{ ...inputStyle, width: '120px' }} placeholder="우편번호" readOnly />
                     <button type="button" onClick={openDaum} style={{ padding: '10px 16px', background: '#1a1a1a', color: '#fff', border: 'none', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                      \uC8FC\uC18C \uAC80\uC0C9
+                      주소 검색
                     </button>
                   </div>
-                  <input name="address" value={profile.address} onChange={handleChange} style={{ ...inputStyle, marginBottom: '8px' }} placeholder="\uAE30\uBCF8\uC8FC\uC18C" readOnly />
-                  <input name="address_detail" value={profile.address_detail} onChange={handleChange} style={inputStyle} placeholder="\uC0C1\uC138\uC8FC\uC18C" />
+                  <input name="address" value={profile.address} onChange={handleChange} style={{ ...inputStyle, marginBottom: '8px' }} placeholder="기본주소" readOnly />
+                  <input name="address_detail" value={profile.address_detail} onChange={handleChange} style={inputStyle} placeholder="상세주소" />
                 </div>
               </div>
-              <button type="submit" disabled={saving}
-                style={{ marginTop: '32px', padding: '14px 32px', background: '#1a1a1a', color: '#fff', border: 'none', fontSize: '13px', letterSpacing: '.1em', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
-                {saved ? '\u2713 \uC800\uC7A5\uB428' : saving ? '\uC800\uC7A5 \uC911...' : '\uC800\uC7A5\uD558\uAE30'}
+              <button type="submit" disabled={saving} style={{ marginTop: '32px', padding: '14px 32px', background: '#1a1a1a', color: '#fff', border: 'none', fontSize: '13px', letterSpacing: '.1em', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+                {saved ? '✓ 저장됨' : saving ? '저장 중...' : '저장하기'}
               </button>
             </form>
           )}
@@ -125,7 +132,7 @@ export default function MyPage() {
           {tab === 'orders' && (
             <div>
               {orders.length === 0 ? (
-                <p style={{ color: '#999', fontSize: '14px', textAlign: 'center', padding: '40px 0' }}>\uC8FC\uBB38 \uB0B4\uC5ED\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.</p>
+                <p style={{ color: '#999', fontSize: '14px', textAlign: 'center', padding: '40px 0' }}>주문 내역이 없습니다.</p>
               ) : (
                 orders.map(order => {
                   const data = order.order_data || {};
@@ -136,9 +143,9 @@ export default function MyPage() {
                         <span style={{ fontSize: '13px', color: '#999' }}>{date}</span>
                         <span style={{ fontSize: '14px', fontWeight: 500 }}>${(order.total_usd || 0).toFixed(2)}</span>
                       </div>
-                      <p style={{ fontSize: '14px', marginBottom: '4px' }}>{order.product_name || '\uC8FC\uBB38'}</p>
+                      <p style={{ fontSize: '14px', marginBottom: '4px' }}>{order.product_name || '주문'}</p>
                       <p style={{ fontSize: '12px', color: '#999' }}>
-                        \uBC1B\uB294 \uBD84: {data.recipientName || ''} / {data.recipientPhone || ''}
+                        받는 분: {data.recipientName || ''} / {data.recipientPhone || ''}
                       </p>
                     </div>
                   );
