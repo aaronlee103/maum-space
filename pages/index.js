@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
+import useLanguage from '../lib/useLanguage';
+import tr from '../lib/translations';
 
 export default function Home() {
   const [url, setUrl] = useState('');
@@ -9,6 +11,8 @@ export default function Home() {
   const [cartCount, setCartCount] = useState(0);
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const { lang, setLang } = useLanguage();
+  const t = { ...tr.common[lang], ...tr.index[lang] };
 
   useEffect(() => {
     const cart = JSON.parse(localStorage.getItem('maum_cart') || '[]');
@@ -34,10 +38,17 @@ export default function Home() {
     router.push('/price');
   };
 
+  const LangToggle = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1px', border: '1px solid #e8e8e8', borderRadius: '3px', overflow: 'hidden', marginLeft: '16px' }}>
+      <button onClick={() => setLang('ko')} style={{ padding: '3px 8px', fontSize: '10px', letterSpacing: '0.08em', background: lang === 'ko' ? '#1a1a1a' : 'transparent', color: lang === 'ko' ? '#fff' : '#aaa', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>KO</button>
+      <button onClick={() => setLang('en')} style={{ padding: '3px 8px', fontSize: '10px', letterSpacing: '0.08em', background: lang === 'en' ? '#1a1a1a' : 'transparent', color: lang === 'en' ? '#fff' : '#aaa', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>EN</button>
+    </div>
+  );
+
   return (
     <>
       <Head>
-        <title>Maum — 한국으로 마음을 전합니다</title>
+        <title>{t.pageTitle}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;300&family=Noto+Sans+KR:wght@200;300;400&display=swap" rel="stylesheet" />
@@ -45,37 +56,40 @@ export default function Home() {
       <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', fontFamily: '"Noto Sans KR", sans-serif', color: '#1a1a1a' }}>
         <header style={{ padding: '36px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '13px', fontWeight: 300, letterSpacing: '0.25em', textTransform: 'uppercase' }}>Maum</span>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <nav style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
             {cartCount > 0 && (
               <button onClick={() => router.push('/cart')} style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer', color: '#1a1a1a' }}>
-                장바구니 ({cartCount})
+                {t.cart} ({cartCount})
               </button>
             )}
             {user ? (
               <button onClick={() => router.push('/mypage')} style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer', color: '#1a1a1a' }}>
-                마이페이지
+                {t.mypage}
               </button>
             ) : (
               <>
                 <button onClick={() => router.push('/login')} style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', background: 'none', border: 'none', cursor: 'pointer', color: '#1a1a1a' }}>
-                  로그인
+                  {t.login}
                 </button>
                 <button onClick={() => router.push('/signup')} style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', background: 'none', border: '1px solid #1a1a1a', cursor: 'pointer', color: '#1a1a1a', padding: '6px 14px' }}>
-                  회원가입
+                  {t.signup}
                 </button>
               </>
             )}
-          </div>
+            {LangToggle}
+          </nav>
         </header>
 
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '0 48px 80px' }}>
           <div style={{ width: '100%', maxWidth: '640px' }}>
             <div style={{ textAlign: 'center', marginBottom: '56px' }}>
               <h1 style={{ fontFamily: '"Noto Serif KR", serif', fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 200, marginBottom: '16px', lineHeight: 1.4 }}>
-                한국으로 마음을 전합니다.
+                {t.heading.split('\n').map((line, i) => (
+                  <span key={i}>{line}{i === 0 && <br />}</span>
+                ))}
               </h1>
               <p style={{ fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: '#999', fontWeight: 300 }}>
-                Coupang Concierge Service
+                {t.subtitle}
               </p>
             </div>
 
@@ -84,32 +98,32 @@ export default function Home() {
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="쿠팡 상품 링크를 입력하세요"
+                placeholder={t.placeholder}
                 required
-                style={{ width: '100%', padding: '16px 0', fontSize: '14px', fontFamily: '"Noto Sans KR", sans-serif', fontWeight: 300, border: 'none', borderBottom: '1px solid #ccc', outline: 'none', backgroundColor: 'transparent', color: '#1a1a1a', boxSizing: 'border-box', marginBottom: '0' }}
+                style={{ width: '100%', padding: '16px 0', fontSize: '14px', fontFamily: '"Noto Sans KR", sans-serif', fontWeight: 300, border: 'none', borderBottom: '1px solid #ccc', outline: 'none', backgroundColor: 'transparent', color: '#1a1a1a' }}
               />
               <button
                 type="submit"
                 disabled={loading}
-                style={{ width: '100%', padding: '20px', marginTop: '24px', backgroundColor: '#1a1a1a', color: '#ffffff', border: 'none', fontSize: '12px', letterSpacing: '0.25em', textTransform: 'uppercase', cursor: loading ? 'wait' : 'pointer', fontFamily: '"Noto Sans KR", sans-serif', fontWeight: 300 }}>
-                {loading ? '확인 중...' : 'Check Price'}
+                style={{ width: '100%', padding: '20px', marginTop: '24px', backgroundColor: '#1a1a1a', color: '#ffffff', border: 'none', fontSize: '12px', letterSpacing: '0.25em', textTransform: 'uppercase', cursor: loading ? 'wait' : 'pointer' }}>
+                {loading ? t.btnLoading : t.btn}
               </button>
             </form>
           </div>
         </main>
 
         <footer style={{ padding: '32px 48px', borderTop: '1px solid #f0f0f0', background: '#fafaf8' }}>
-        <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-            <a href="/about" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>About</a>
-            <a href="/how-it-works" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>이용 방법</a>
-            <a href="/terms" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>이용약관</a>
-            <a href="/privacy" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>개인정보처리방침</a>
-            <a href="/contact" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>문의하기</a>
+          <div style={{ maxWidth: '640px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+              <a href="/about" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>{t.about}</a>
+              <a href="/how-it-works" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>{t.howItWorks}</a>
+              <a href="/terms" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>{t.terms}</a>
+              <a href="/privacy" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>{t.privacy}</a>
+              <a href="/contact" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>{t.contact}</a>
+            </div>
+            <span style={{ fontSize: '11px', color: '#bbb' }}>{t.copyright}</span>
           </div>
-          <span style={{ fontSize: '11px', color: '#bbb' }}>© 2026 Maum Concierge</span>
-        </div>
-      </footer>
+        </footer>
       </div>
     </>
   );
