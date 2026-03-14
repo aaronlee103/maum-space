@@ -6,9 +6,9 @@ export default async function handler(req, res) {
   const SCRAPINGBEE_KEY = '8ME8HXUHINKJG08JIUJTBP7ACDQFKTGLXRQ4P0U9UWAS5H3HJ3LYA283OR71XIKE6QSABMQX3RIBSYA8';
 
   try {
-    const sbUrl = `https://app.scrapingbee.com/api/v1?api_key=${SCRAPINGBEE_KEY}&url=${encodeURIComponent(url)}&render_js=true&wait=3000&block_resources=false`;
+    const sbUrl = 'https://app.scrapingbee.com/api/v1?api_key=' + SCRAPINGBEE_KEY + '&url=' + encodeURIComponent(url) + '&render_js=true&wait=3000&block_resources=false';
     const response = await fetch(sbUrl, { headers: { 'Accept': 'text/html' } });
-    
+
     if (!response.ok) {
       const errText = await response.text();
       console.error('ScrapingBee error:', response.status, errText);
@@ -17,60 +17,67 @@ export default async function handler(req, res) {
 
     const html = await response.text();
 
-    // Extract price
+    // Extract price - try multiple patterns
     let priceKrw = null;
 
-    // Pattern 1: discount price
+    // Pattern 1: discount-price class
     const discountMatch = html.match(/class="[^"]*discount-price[^"]*"[^>]*>[sS]*?([0-9,]+)s*원/);
     if (discountMatch) priceKrw = parseInt(discountMatch[1].replace(/,/g, ''), 10);
 
-    // Pattern 2: sale price
+    // Pattern 2: sale-price
     if (!priceKrw) {
       const saleMatch = html.match(/sale-price[^>]*>[sS]{0,100}?([0-9,]{3,})s*원/);
       if (saleMatch) priceKrw = parseInt(saleMatch[1].replace(/,/g, ''), 10);
     }
 
-    // Pattern 3: totalPrice
+    // Pattern 3: totalPrice in JSON
     if (!priceKrw) {
-      const totalMatch = html.match(/totalPrice['":s]+([0-9,]+)/);
+      const totalMatch = html.match(/totalPrice["':\s]+([0-9,]+)/);
       if (totalMatch) priceKrw = parseInt(totalMatch[1].replace(/,/g, ''), 10);
     }
 
-    // Pattern 4: JSON data
+    // Pattern 4: "price" in JSON
     if (!priceKrw) {
-      const jsonMatch = html.match(/"price"s*:s*([0-9]+)/);
+      const jsonMatch = html.match(/"price"\s*:\s*([0-9]+)/);
       if (jsonMatch) priceKrw = parseInt(jsonMatch[1], 10);
     }
 
-    // Pattern 5: generic Korean price pattern
+    // Pattern 5: number followed by Korean Won unicode
     if (!priceKrw) {
-      const genericMatch = html.match(/([0-9]{1,3}(?:,[0-9]{3})+)s*원/);
-      if (genericMatch) priceKrw = parseInt(genericMatch[1].replace(/,/g, ''), 10);
+      const wonMatch = html.match(/([0-9]{1,3}(?:,[0-9]{3})+)s*원/);
+      if (wonMatch) priceKrw = parseInt(wonMatch[1].replace(/,/g, ''), 10);
     }
 
     if (!priceKrw || priceKrw <= 0) {
       return res.status(200).json({ error: 'price_not_found' });
     }
 
-    // Extract product name
-    let productName = '쿠팡 상품';
-    const titleMatch = html.match(/<title[^>]*>([^<]+)</title>/i);
+    // Extract product name from title tag
+    let productName = 'Coupang Product';
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     if (titleMatch) {
-      productName = titleMatch[1].replace(/s*[|-]s*쿠팡.*$/i, '').trim();
-    }
-    if (!productName || productName.length < 2) {
-      const h1Match = html.match(/<h1[^>]*>([^<]+)</h1>/i);
-      if (h1Match) productName = h1Match[1].trim();
+      let t = titleMatch[1].trim();
+      // Remove site name suffix (split on | or -)
+      const pipeIdx = t.lastIndexOf(' | ');
+      if (pipeIdx > 0) t = t.substring(0, pipeIdx).trim();
+      const dashIdx = t.lastIndexOf(' - ');
+      if (dashIdx > 0) t = t.substring(0, dashIdx).trim();
+      if (t.length > 1) productName = t;
     }
 
     // Extract product image
     let imageUrl = null;
-    const imgMatch = html.match(/<img[^>]+id="[^"]*mainImage[^"]*"[^>]+src="([^"]+)"/i)
-      || html.match(/productImageUrl['":s]+"([^"]+.(?:jpg|jpeg|png|webp)[^"]*)"/i)
-      || html.match(/<img[^>]+class="[^"]*product[^"]*"[^>]+src="([^"]+)"/i);
-    if (imgMatch) imageUrl = imgMatch[1];
+    const imgPatterns = [
+      /id="mainImage"[^>]*src="([^"]+)"/i,
+      /productImageUrl["':\s]+"([^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i,
+      /<img[^>]+class="[^"]*product[^"]*"[^>]+src="([^"]+)"/i,
+    ];
+    for (const pat of imgPatterns) {
+      const m = html.match(pat);
+      if (m) { imageUrl = m[1]; break; }
+    }
 
-    // Get exchange rate KRW → USD
+    // Get live KRW to USD exchange rate
     let exchangeRate = 1350;
     try {
       const rateRes = await fetch('https://api.exchangerate-api.com/v4/latest/KRW');
@@ -79,7 +86,7 @@ export default async function handler(req, res) {
         exchangeRate = 1 / rateData.rates.USD;
       }
     } catch (e) {
-      console.log('Exchange rate fallback:', e.message);
+      console.log('Exchange rate fallback used');
     }
 
     const priceUsd = priceKrw / exchangeRate;
