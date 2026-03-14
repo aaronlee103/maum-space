@@ -5,19 +5,15 @@ export default async function handler(req, res) {
 
   const SCRAPINGBEE_KEY = '8ME8HXUHINKJG08JIUJTBP7ACDQFKTGLXRQ4P0U9UWAS5H3HJ3LYA283OR71XIKE6QSABMQX3RIBSYA8';
 
-  // CSS selector extraction rules - type must be 'item' or 'list'
+  // Only use item/list types - no attribute
   const extractRules = JSON.stringify({
     price1: { selector: '.total-price strong', type: 'item' },
     price2: { selector: '.prod-coupon-price-value', type: 'item' },
     price3: { selector: '#productPrice', type: 'item' },
     price4: { selector: '.prod-price .price', type: 'item' },
-    price5: { selector: '[class*="discount-price"]', type: 'item' },
-    price6: { selector: '[class*="sale-price"]', type: 'item' },
     name1: { selector: 'h1.prod-title', type: 'item' },
     name2: { selector: '.prod-title', type: 'item' },
     name3: { selector: 'h1', type: 'item' },
-    image1: { selector: '#mainImage', type: 'item', attribute: 'src' },
-    image2: { selector: '.prod-atf-main-img-area img', type: 'item', attribute: 'src' },
   });
 
   try {
@@ -38,7 +34,7 @@ export default async function handler(req, res) {
     console.log('ScrapingBee extracted:', JSON.stringify(data));
 
     // Find the first non-null/non-empty price
-    let rawPrice = data.price1 || data.price2 || data.price3 || data.price4 || data.price5 || data.price6;
+    let rawPrice = data.price1 || data.price2 || data.price3 || data.price4;
 
     if (!rawPrice) {
       return res.status(200).json({ error: 'price_not_found', debug: JSON.stringify(data).substring(0, 500) });
@@ -53,9 +49,6 @@ export default async function handler(req, res) {
     // Product name
     let productName = data.name1 || data.name2 || data.name3 || 'Coupang Product';
     productName = String(productName).trim().substring(0, 100);
-
-    // Product image
-    const imageUrl = data.image1 || data.image2 || null;
 
     // Get live KRW to USD exchange rate
     let exchangeRate = 1350;
@@ -75,7 +68,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       productName,
-      imageUrl,
+      imageUrl: null,
       priceKrw,
       priceUsd: parseFloat(priceUsd.toFixed(2)),
       serviceFee: parseFloat(serviceFee.toFixed(2)),
