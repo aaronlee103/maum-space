@@ -101,7 +101,7 @@ export default function Home() {
         <footer style={{ padding: '24px 48px', borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#999' }}>Maum.space</span>
           <span style={{ fontSize: '11px', color: '#999' }}>© 2026 Maum Concierge</span>
-          <span style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999' }}>How it works · Privacy</span>
+          <a href="/contact" style={{ fontSize: '11px', letterSpacing: '0.05em', color: '#999', textDecoration: 'none' }}>문의하기</a>
         </footer>
       </div>
     </>
