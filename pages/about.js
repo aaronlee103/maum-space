@@ -29,7 +29,7 @@ export default function AboutPage() {
           <div style={{ marginBottom: '64px' }}>
             <p style={{ fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#999', marginBottom: '16px' }}>About Us</p>
             <h1 style={{ fontFamily: '"Noto Serif KR", serif', fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 200, lineHeight: 1.5, margin: 0 }}>
-              마음을 전하는 방법이<br />더 쉽지야 합니다.
+              마음을 전하는 방법이<br />더 쉼워야 합니다.
             </h1>
           </div>
 
