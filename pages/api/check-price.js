@@ -5,22 +5,14 @@ export default async function handler(req, res) {
 
   const SCRAPINGBEE_KEY = '8ME8HXUHINKJG08JIUJTBP7ACDQFKTGLXRQ4P0U9UWAS5H3HJ3LYA283OR71XIKE6QSABMQX3RIBSYA8';
 
-  // Only use item/list types - no attribute
-  const extractRules = JSON.stringify({
-    price1: { selector: '.total-price strong', type: 'item' },
-    price2: { selector: '.prod-coupon-price-value', type: 'item' },
-    price3: { selector: '#productPrice', type: 'item' },
-    price4: { selector: '.prod-price .price', type: 'item' },
-    name1: { selector: 'h1.prod-title', type: 'item' },
-    name2: { selector: '.prod-title', type: 'item' },
-    name3: { selector: 'h1', type: 'item' },
-  });
-
   try {
+    // Use stealth proxy + render_js to bypass Coupang bot detection
+    // Return raw HTML so we can inspect the structure
     const sbUrl = 'https://app.scrapingbee.com/api/v1?api_key=' + SCRAPINGBEE_KEY
       + '&url=' + encodeURIComponent(url)
-      + '&render_js=true&wait=3000'
-      + '&extract_rules=' + encodeURIComponent(extractRules);
+      + '&render_js=true&wait=4000'
+      + '&stealth_proxy=true'
+      + '&country_code=kr';
 
     const response = await fetch(sbUrl);
 
@@ -30,25 +22,57 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'scraping_failed', detail: errText.substring(0, 300) });
     }
 
-    const data = await response.json();
-    console.log('ScrapingBee extracted:', JSON.stringify(data));
+    const html = await response.text();
+    console.log('HTML length:', html.length);
+    console.log('HTML snippet:', html.substring(0, 500));
 
-    // Find the first non-null/non-empty price
-    let rawPrice = data.price1 || data.price2 || data.price3 || data.price4;
+    // Try to find price in HTML using multiple patterns
+    let priceKrw = null;
 
-    if (!rawPrice) {
-      return res.status(200).json({ error: 'price_not_found', debug: JSON.stringify(data).substring(0, 500) });
+    // Look for price in script tags (JSON data)
+    const scriptPriceMatch = html.match(/"finalPrice"\s*:\s*([0-9]+)/)
+      || html.match(/"price"\s*:\s*([0-9]+)/)
+      || html.match(/"salePrice"\s*:\s*([0-9]+)/)
+      || html.match(/"totalPrice"\s*:\s*([0-9]+)/);
+    if (scriptPriceMatch) {
+      priceKrw = parseInt(scriptPriceMatch[1], 10);
+      console.log('Found price via JSON:', priceKrw);
     }
 
-    // Parse price - strip everything except digits
-    const priceKrw = parseInt(String(rawPrice).replace(/[^0-9]/g, ''), 10);
+    // Korean won pattern in HTML
+    if (!priceKrw) {
+      const wonMatches = html.match(/([0-9]{1,3}(?:,[0-9]{3})+)(?:<\/span>|<\/strong>|<\/em>|\s*<)/g);
+      if (wonMatches && wonMatches.length > 0) {
+        const prices = wonMatches.map(m => parseInt(m.replace(/[^0-9]/g, ''), 10)).filter(p => p > 1000 && p < 10000000);
+        if (prices.length > 0) {
+          priceKrw = Math.min(...prices);
+          console.log('Found price via pattern:', priceKrw, 'from', prices);
+        }
+      }
+    }
+
     if (!priceKrw || priceKrw <= 0) {
-      return res.status(200).json({ error: 'price_not_found' });
+      // Return debug info
+      const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+      const bodySnippet = html.substring(0, 1000);
+      console.log('Title:', titleMatch ? titleMatch[1] : 'not found');
+      return res.status(200).json({
+        error: 'price_not_found',
+        htmlLength: html.length,
+        title: titleMatch ? titleMatch[1] : '',
+        snippet: bodySnippet.substring(0, 300)
+      });
     }
 
-    // Product name
-    let productName = data.name1 || data.name2 || data.name3 || 'Coupang Product';
-    productName = String(productName).trim().substring(0, 100);
+    // Product name from title
+    let productName = 'Coupang Product';
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    if (titleMatch) {
+      let t = titleMatch[1].trim();
+      const pipeIdx = t.lastIndexOf(' | ');
+      if (pipeIdx > 0) t = t.substring(0, pipeIdx).trim();
+      if (t.length > 1) productName = t;
+    }
 
     // Get live KRW to USD exchange rate
     let exchangeRate = 1350;
