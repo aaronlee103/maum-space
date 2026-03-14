@@ -6,8 +6,6 @@ export default async function handler(req, res) {
   const SCRAPINGBEE_KEY = '8ME8HXUHINKJG08JIUJTBP7ACDQFKTGLXRQ4P0U9UWAS5H3HJ3LYA283OR71XIKE6QSABMQX3RIBSYA8';
 
   try {
-    // Use stealth proxy + render_js to bypass Coupang bot detection
-    // Return raw HTML so we can inspect the structure
     const sbUrl = 'https://app.scrapingbee.com/api/v1?api_key=' + SCRAPINGBEE_KEY
       + '&url=' + encodeURIComponent(url)
       + '&render_js=true&wait=4000'
@@ -15,53 +13,77 @@ export default async function handler(req, res) {
       + '&country_code=kr';
 
     const response = await fetch(sbUrl);
-
     if (!response.ok) {
       const errText = await response.text();
-      console.error('ScrapingBee error:', response.status, errText.substring(0, 300));
       return res.status(500).json({ error: 'scraping_failed', detail: errText.substring(0, 300) });
     }
 
     const html = await response.text();
-    console.log('HTML length:', html.length);
-    console.log('HTML snippet:', html.substring(0, 500));
 
-    // Try to find price in HTML using multiple patterns
+    // Strategy 1: Find finalPrice in JSON (most reliable for Coupang)
     let priceKrw = null;
 
-    // Look for price in script tags (JSON data)
-    const scriptPriceMatch = html.match(/"finalPrice"\s*:\s*([0-9]+)/)
-      || html.match(/"price"\s*:\s*([0-9]+)/)
-      || html.match(/"salePrice"\s*:\s*([0-9]+)/)
-      || html.match(/"totalPrice"\s*:\s*([0-9]+)/);
-    if (scriptPriceMatch) {
-      priceKrw = parseInt(scriptPriceMatch[1], 10);
-      console.log('Found price via JSON:', priceKrw);
+    const finalPriceMatch = html.match(/"finalPrice"\s*:\s*([0-9]+)/);
+    if (finalPriceMatch) {
+      priceKrw = parseInt(finalPriceMatch[1], 10);
+      console.log('Found finalPrice:', priceKrw);
     }
 
-    // Korean won pattern in HTML
+    // Strategy 2: salePrice in JSON
     if (!priceKrw) {
-      const wonMatches = html.match(/([0-9]{1,3}(?:,[0-9]{3})+)(?:<\/span>|<\/strong>|<\/em>|\s*<)/g);
-      if (wonMatches && wonMatches.length > 0) {
-        const prices = wonMatches.map(m => parseInt(m.replace(/[^0-9]/g, ''), 10)).filter(p => p > 1000 && p < 10000000);
-        if (prices.length > 0) {
-          priceKrw = Math.min(...prices);
-          console.log('Found price via pattern:', priceKrw, 'from', prices);
-        }
+      const salePriceMatch = html.match(/"salePrice"\s*:\s*([0-9]+)/);
+      if (salePriceMatch) {
+        priceKrw = parseInt(salePriceMatch[1], 10);
+        console.log('Found salePrice:', priceKrw);
       }
     }
 
-    if (!priceKrw || priceKrw <= 0) {
-      // Return debug info
-      const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-      const bodySnippet = html.substring(0, 1000);
-      console.log('Title:', titleMatch ? titleMatch[1] : 'not found');
-      return res.status(200).json({
-        error: 'price_not_found',
-        htmlLength: html.length,
-        title: titleMatch ? titleMatch[1] : '',
-        snippet: bodySnippet.substring(0, 300)
-      });
+    // Strategy 3: discountedPrice in JSON
+    if (!priceKrw) {
+      const discMatch = html.match(/"discountedPrice"\s*:\s*([0-9]+)/);
+      if (discMatch) {
+        priceKrw = parseInt(discMatch[1], 10);
+        console.log('Found discountedPrice:', priceKrw);
+      }
+    }
+
+    // Strategy 4: priceView patterns like 33,160 near price keywords in HTML
+    if (!priceKrw) {
+      // Look for price near "판매가" or "할인가" text
+      const priceNearLabel = html.match(/(?:finalPrice|salePrice|discountPrice|productPrice)[^0-9]{0,20}([0-9]{4,7})/);
+      if (priceNearLabel) {
+        priceKrw = parseInt(priceNearLabel[1], 10);
+        console.log('Found price near label:', priceKrw);
+      }
+    }
+
+    // Strategy 5: vendorItemId-based search
+    if (!priceKrw) {
+      try {
+        const urlObj = new URL(url);
+        const vendorItemId = urlObj.searchParams.get('vendorItemId');
+        if (vendorItemId) {
+          const vendorRegex = new RegExp(vendorItemId + '[^}]{0,200}"price"\\s*:\\s*([0-9]+)');
+          const vMatch = html.match(vendorRegex);
+          if (vMatch) {
+            priceKrw = parseInt(vMatch[1], 10);
+            console.log('Found vendorItemId price:', priceKrw);
+          }
+        }
+      } catch(e) {}
+    }
+
+    // Log all found prices for debugging
+    const allPrices = [];
+    const priceRegex = /"(?:finalPrice|salePrice|discountedPrice|price)"\s*:\s*([0-9]{4,7})/g;
+    let m;
+    while ((m = priceRegex.exec(html)) !== null) {
+      allPrices.push({ key: m[0].split(':')[0].replace(/"/g,'').trim(), val: parseInt(m[1], 10) });
+    }
+    console.log('All JSON prices found:', JSON.stringify(allPrices.slice(0, 20)));
+
+    if (!priceKrw || priceKrw < 1000) {
+      return res.status(200).json({ error: 'price_not_found', allPrices: allPrices.slice(0, 20) });
     }
 
     // Product name from title
@@ -79,12 +101,8 @@ export default async function handler(req, res) {
     try {
       const rateRes = await fetch('https://api.exchangerate-api.com/v4/latest/KRW');
       const rateData = await rateRes.json();
-      if (rateData.rates && rateData.rates.USD) {
-        exchangeRate = 1 / rateData.rates.USD;
-      }
-    } catch (e) {
-      console.log('Exchange rate fallback used');
-    }
+      if (rateData.rates && rateData.rates.USD) exchangeRate = 1 / rateData.rates.USD;
+    } catch (e) {}
 
     const priceUsd = priceKrw / exchangeRate;
     const serviceFee = priceUsd * 0.1;
