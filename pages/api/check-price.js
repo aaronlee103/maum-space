@@ -3,7 +3,7 @@ export default async function handler(req, res) {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'URL is required' });
 
-  const SCRAPINGBEE_KEY = '8ME8HXUHINKJG08JIUJTBP7ACDQFKTGLXRQ4P0U9UWAS5H3HJ3LYA283OR71XIKE6QSABMQX3RIBSYA8';
+  const SCRAPINGBEE_KEY = process.env.SCRAPINGBEE_KEY;
 
   // HTML에서 가격/상품명 추출 (공통 로직)
   function extractData(html) {
