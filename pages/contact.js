@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 export default function ContactPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,31 +51,34 @@ export default function ContactPage() {
         </div>
         <h1 style={{ fontSize: '22px', fontWeight: 300, letterSpacing: '.15em', marginBottom: '8px' }}>Maum</h1>
         <p style={{ fontSize: '12px', color: '#999', letterSpacing: '.1em', marginBottom: '48px' }}>문의 하기</p>
+
         {sent ? (
-          <div style={{ textAlign: 'center', maxWidth: '360px' }}>
-            <div style={{ fontSize: '32px', marginBottom: '16px' }}>✓</div>
-            <p style={{ fontSize: '14px', color: '#555', marginBottom: '8px' }}>문의가 접수되었습니다.</p>
-            <button onClick={() => router.push('/')} style={{ marginTop: '24px', fontSize: '12px', color: '#999', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-              홈으로 돌아가기
-            </button>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: '14px', color: '#555', marginBottom: '24px' }}>문의가 접수되었습니다. 감사합니다.</p>
+            <button onClick={() => router.push('/')} style={{ fontSize: '12px', color: '#999', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '.05em' }}>← 홈으로</button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
+          <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '570px' }}>
             <div style={{ marginBottom: '28px' }}>
-              <label style={labelStyle}>이 름</label>
-              <input name="name" value={form.name} onChange={handleChange} required style={inputStyle} placeholder="홍길동" />
+              <label style={labelStyle}>이 름 <span style={{ color: '#c00' }}>*</span></label>
+              <input name="name" value={form.name} onChange={handleChange} required placeholder="홍길동" style={inputStyle} />
             </div>
             <div style={{ marginBottom: '28px' }}>
-              <label style={labelStyle}>문의 내용</label>
-              <textarea name="message" value={form.message} onChange={handleChange} required rows={4}
-                style={{ ...inputStyle, resize: 'vertical' }} placeholder="문의 내용을 입력해 주세요." />
+              <label style={labelStyle}>이메일 <span style={{ color: '#c00' }}>*</span></label>
+              <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="example@email.com" style={inputStyle} />
             </div>
-            {error && <p style={{ color: 'red', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
-            <button type="submit" disabled={loading} style={{
-              width: '100%', padding: '16px', background: '#111', color: '#fff',
-              border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '13px', letterSpacing: '.1em', marginTop: '8px', opacity: loading ? 0.7 : 1,
-            }}>
+            <div style={{ marginBottom: '28px' }}>
+              <label style={labelStyle}>전화번호 <span style={{ color: '#c00' }}>*</span></label>
+              <input name="phone" type="tel" value={form.phone} onChange={handleChange} required placeholder="010-0000-0000" style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: '40px' }}>
+              <label style={labelStyle}>문의 내용 <span style={{ color: '#c00' }}>*</span></label>
+              <textarea name="message" value={form.message} onChange={handleChange} required placeholder="문의 내용을 입력해 주세요." rows={5}
+                style={{ ...inputStyle, resize: 'vertical', paddingTop: '12px' }} />
+            </div>
+            {error && <p style={{ color: '#c00', fontSize: '12px', marginBottom: '16px' }}>{error}</p>}
+            <button type="submit" disabled={loading}
+              style={{ width: '100%', padding: '16px', background: '#1a1a1a', color: '#fff', border: 'none', fontSize: '13px', letterSpacing: '.1em', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
               {loading ? '전송 중...' : '문의 남기기'}
             </button>
           </form>
