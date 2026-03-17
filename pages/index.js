@@ -16,7 +16,8 @@ export default function Home() {
   const { lang, setLang } = useLanguage();
   const EXCHANGE_RATE = 1360;
 
-  useEffect(() => {
+  useEffect(() => {224
+                   
     const cart = JSON.parse(localStorage.getItem('maum_cart') || '[]');
     setCartCount(cart.length);
   }, []);
@@ -226,6 +227,7 @@ export default function Home() {
         <nav>
           <a href="/cart">{s.cartLabel}{cartCount > 0 && <span className="cart-badge">{cartCount}</span>}</a>
           <a href="/contact">{s.contact}</a>
+              <a href="/login">로그인</a>
           <div className="lang-toggle">
             <button className={lang === 'ko' ? 'active' : ''} onClick={() => setLang('ko')}>KO</button>
             <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
