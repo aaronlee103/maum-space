@@ -284,15 +284,20 @@ export default function AdminPage() {
         ) : (
           inquiries.map(inq => (
             <div key={inq.id} style={{ background: '#fff', borderRadius: '8px', marginBottom: '8px', padding: '16px 20px', border: '1px solid #ebebea' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontWeight: 500, fontSize: '13px' }}>{inq.name}</span>
-                <span style={{ fontSize: '11px', color: '#999' }}>{new Date(inq.created_at).toLocaleString('ko-KR')}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <div>
+                  <span style={{ fontWeight: 500, fontSize: '13px', marginRight: '12px' }}>{inq.name}</span>
+                  <span style={{ fontSize: '12px', color: '#555', marginRight: '10px' }}>{inq.email}</span>
+                  <span style={{ fontSize: '12px', color: '#555' }}>{inq.phone}</span>
+                </div>
+                <span style={{ fontSize: '11px', color: '#999', whiteSpace: 'nowrap' }}>{new Date(inq.created_at).toLocaleString('ko-KR')}</span>
               </div>
-              <div style={{ fontSize: '13px', color: '#555', whiteSpace: 'pre-wrap' }}>{inq.message}</div>
+              <div style={{ fontSize: '13px', color: '#333', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{inq.message}</div>
             </div>
           ))
         )}
       </div>
+
 </div>
     </>
   );
