@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import useLanguage from '../lib/useLanguage';
+import { supabase } from '../lib/supabase';
 
 export default function Home() {
   const [productName, setProductName] = useState('');
@@ -13,6 +14,7 @@ export default function Home() {
   const [breakdown, setBreakdown] = useState(null);
   const [toast, setToast] = useState('');
   const router = useRouter();
+  const [user, setUser] = useState(null);
   const { lang, setLang } = useLanguage();
   const EXCHANGE_RATE = 1360;
 
@@ -21,6 +23,16 @@ export default function Home() {
     const cart = JSON.parse(localStorage.getItem('maum_cart') || '[]');
     setCartCount(cart.length);
   }, []);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
 
   function changeQty(delta) {
     const next = Math.max(1, qty + delta);
@@ -227,7 +239,7 @@ export default function Home() {
         <nav>
           <a href="/cart">{s.cartLabel}{cartCount > 0 && <span className="cart-badge">{cartCount}</span>}</a>
           <a href="/contact">{s.contact}</a>
-              <a href="/login">로그인</a>
+              {user ? <a href="/mypage">마이페이지</a> : <a href="/login">로그인</a>}
           <div className="lang-toggle">
             <button className={lang === 'ko' ? 'active' : ''} onClick={() => setLang('ko')}>KO</button>
             <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
