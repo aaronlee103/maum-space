@@ -25,7 +25,7 @@ export default function LoginPage() {
         password: form.password,
       });
       if (loginError) throw loginError;
-      const redirect = router.query.redirect || '/';
+      const redirect = router.query.redirect || '/mypage';
       router.push(redirect);
     } catch (err) {
       setError(err.message);
@@ -64,7 +64,7 @@ export default function LoginPage() {
       <Head><title>로그인 — Maum</title></Head>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: '#fafaf8' }}>
         <div style={{ position: 'absolute', top: '24px', left: '32px' }}>
-          <button onClick={() => router.push('/')} style={{ fontSize: '12px', color: '#999', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '.05em' }}>
+          <button onClick={() => router.push('/mypage')} style={{ fontSize: '12px', color: '#999', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '.05em' }}>
             ← 홈으로
           </button>
         </div>
