@@ -239,7 +239,7 @@ export default function Home() {
         <nav>
           <a href="/cart">{s.cartLabel}{cartCount > 0 && <span className="cart-badge">{cartCount}</span>}</a>
           <a href="/contact">{s.contact}</a>
-              {user ? <a href="/mypage">마이페이지</a> : <a href="/login">로그인</a>}
+              {user ? <a href="/mypage">{lang === 'ko' ? '마이페이지' : 'My Page'}</a> : <a href="/login">{lang === 'ko' ? '로그인' : 'Login'}</a>}
           <div className="lang-toggle">
             <button className={lang === 'ko' ? 'active' : ''} onClick={() => setLang('ko')}>KO</button>
             <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
@@ -360,10 +360,10 @@ export default function Home() {
         <div className="footer-inner">
           <div className="footer-links">
             <a href="/about">About</a>
-            <a href="/how-it-works">이용 방법</a>
-            <a href="/terms">이용약관</a>
-            <a href="/privacy">개인정보처리방침</a>
-            <a href="/contact">문의하기</a>
+            <a href="/how-it-works">{lang === 'ko' ? '이용 방법' : 'How It Works'}</a>
+            <a href="/terms">{lang === 'ko' ? '이용약관' : 'Terms'}</a>
+            <a href="/privacy">{lang === 'ko' ? '개인정보처리방침' : 'Privacy'}</a>
+            <a href="/contact">{lang === 'ko' ? '문의하기' : 'Contact'}</a>
           </div>
           <span className="copyright">© 2026 Maum Concierge</span>
         </div>
