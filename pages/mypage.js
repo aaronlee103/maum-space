@@ -2,8 +2,10 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import useLanguage from '../lib/useLanguage';
 
 export default function MyPage() {
+  const { lang } = useLanguage();
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState({ name: '', email: '', phone: '', postcode: '', address: '', address_detail: '' });
@@ -73,7 +75,7 @@ export default function MyPage() {
 
   return (
     <>
-      <Head><title>마이페이지 — Maum</title></Head>
+      <Head><title>{lang === 'ko' ? '마이페이지' : 'My Page'} — Maum</title></Head>
       <div style={{ minHeight: '100vh', background: '#fafaf8' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', padding: '60px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
@@ -81,15 +83,15 @@ export default function MyPage() {
               <h1 style={{ fontSize: '22px', fontWeight: 300, letterSpacing: '.15em', marginBottom: '4px' }}>
                 <a href="/" style={{ textDecoration: 'none', color: '#1a1a1a' }}>Maum</a>
               </h1>
-              <p style={{ fontSize: '12px', color: '#999' }}>마이페이지</p>
+              <p style={{ fontSize: '12px', color: '#999' }}>{lang === 'ko' ? '마이페이지' : 'My Page'}</p>
             </div>
             <button onClick={handleLogout} style={{ fontSize: '12px', color: '#999', background: 'none', border: '1px solid #ddd', padding: '8px 16px', cursor: 'pointer', letterSpacing: '.05em' }}>
-              로그아웃
+              {lang === 'ko' ? '로그아웃' : 'Logout'}
             </button>
           </div>
 
           <div style={{ display: 'flex', gap: '0', marginBottom: '40px', borderBottom: '1px solid #eee' }}>
-            {[['profile', '프로필'], ['orders', '주문 내역']].map(([key, label]) => (
+            {[['profile', lang === 'ko' ? '프로필' : 'Profile'], ['orders', lang === 'ko' ? '주문 내역' : 'Orders']].map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)} style={{ padding: '12px 24px', background: 'none', border: 'none', borderBottom: tab === key ? '2px solid #1a1a1a' : '2px solid transparent', fontSize: '13px', color: tab === key ? '#1a1a1a' : '#999', cursor: 'pointer', letterSpacing: '.05em', marginBottom: '-1px' }}>
                 {label}
               </button>
