@@ -35,6 +35,7 @@ export default function AdminPage() {
   const [trackingInput, setTrackingInput] = useState({});
   const [filterStatus, setFilterStatus] = useState('all');
   const router = useRouter();
+  const [inquiries, setInquiries] = useState([]);
 
   useEffect(() => {
     supabaseAdmin.auth.getSession().then(({ data: { session } }) => {
@@ -44,6 +45,7 @@ export default function AdminPage() {
       }
       setUser(session.user);
       fetchOrders();
+    fetchInquiries();
     });
   }, []);
 
@@ -55,6 +57,14 @@ export default function AdminPage() {
       .order('created_at', { ascending: false });
     setOrders(data || []);
     setLoading(false);
+  }
+
+  async function fetchInquiries() {
+    const { data } = await supabaseAdmin
+      .from('inquiries')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setInquiries(data || []);
   }
 
   async function updateStatus(orderId, newStatus) {
@@ -265,7 +275,25 @@ export default function AdminPage() {
             );
           })
         )}
+      
+      {/* Inquiries */}
+      <div style={{ marginTop: '48px' }}>
+        <div style={{ fontSize: '11px', letterSpacing: '.1em', textTransform: 'uppercase', color: '#999', marginBottom: '16px' }}>문의 내역</div>
+        {inquiries.length === 0 ? (
+          <div style={{ background: '#fff', padding: '24px', textAlign: 'center', color: '#bbb', borderRadius: '8px', fontSize: '13px' }}>문의가 없습니다</div>
+        ) : (
+          inquiries.map(inq => (
+            <div key={inq.id} style={{ background: '#fff', borderRadius: '8px', marginBottom: '8px', padding: '16px 20px', border: '1px solid #ebebea' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ fontWeight: 500, fontSize: '13px' }}>{inq.name}</span>
+                <span style={{ fontSize: '11px', color: '#999' }}>{new Date(inq.created_at).toLocaleString('ko-KR')}</span>
+              </div>
+              <div style={{ fontSize: '13px', color: '#555', whiteSpace: 'pre-wrap' }}>{inq.message}</div>
+            </div>
+          ))
+        )}
       </div>
+</div>
     </>
   );
 }
