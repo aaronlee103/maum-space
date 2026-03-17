@@ -7,9 +7,11 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { name, message } = req.body;
-  if (!name || !message) return res.status(400).json({ error: '이름과 문의 내용을 입력해주세요.' });
-  const { error } = await supabase.from('inquiries').insert({ name, message });
+  const { name, email, phone, message } = req.body;
+  if (!name || !email || !phone || !message) {
+    return res.status(400).json({ error: '모든 항목을 입력해주세요.' });
+  }
+  const { error } = await supabase.from('inquiries').insert({ name, email, phone, message });
   if (error) return res.status(500).json({ error: error.message });
   return res.status(200).json({ ok: true });
 }
