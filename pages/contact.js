@@ -24,7 +24,7 @@ export default function ContactPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || lang === 'ko' ? '오류가 발생했습니다.' : 'An error occurred.');
+      if (!res.ok) throw new Error(data.error || (lang === 'ko' ? '오류가 발생했습니다.' : 'An error occurred.'));
       setSent(true);
     } catch (err) {
       setError(err.message);
@@ -34,12 +34,14 @@ export default function ContactPage() {
   };
 
   const inputStyle = {
-    width: '100%', padding: '12px 0', fontSize: '14px', border: 'none',
-    borderBottom: '1px solid #ddd', outline: 'none', background: 'transparent', boxSizing: 'border-box',
+    width: '100%', padding: '12px 0', fontSize: '14px',
+    border: 'none', borderBottom: '1px solid #ddd', outline: 'none',
+    background: 'transparent', boxSizing: 'border-box',
   };
+
   const labelStyle = {
-    fontSize: '11px', letterSpacing: '.1em', color: '#999', textTransform: 'uppercase',
-    display: 'block', marginBottom: '4px',
+    fontSize: '11px', letterSpacing: '.1em', color: '#999',
+    textTransform: 'uppercase', display: 'block', marginBottom: '4px',
   };
 
   return (
@@ -51,12 +53,15 @@ export default function ContactPage() {
             ← 홈으로
           </button>
         </div>
+
         <h1 style={{ fontSize: '22px', fontWeight: 300, letterSpacing: '.15em', marginBottom: '8px' }}>Maum</h1>
         <p style={{ fontSize: '12px', color: '#999', letterSpacing: '.1em', marginBottom: '48px' }}>문의 하기</p>
 
         {sent ? (
           <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '14px', color: '#555', marginBottom: '24px' }}>문의가 접수되었습니다. lang === 'ko' ? '감사합니다' : 'Thank you'.</p>
+            <p style={{ fontSize: '14px', color: '#555', marginBottom: '24px' }}>
+              {lang === 'ko' ? '문의가 접수되었습니다. 감사합니다.' : 'Your inquiry has been submitted. Thank you.'}
+            </p>
             <button onClick={() => router.push('/')} style={{ fontSize: '12px', color: '#999', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '.05em' }}>← 홈으로</button>
           </div>
         ) : (
@@ -65,27 +70,32 @@ export default function ContactPage() {
               <label style={labelStyle}>이 름 <span style={{ color: '#c00' }}>*</span></label>
               <input name="name" value={form.name} onChange={handleChange} required placeholder="홍길동" style={inputStyle} />
             </div>
+
             <div style={{ marginBottom: '28px' }}>
               <label style={labelStyle}>{lang === 'ko' ? '이메일' : 'Email'} <span style={{ color: '#c00' }}>*</span></label>
               <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="example@email.com" style={inputStyle} />
             </div>
+
             <div style={{ marginBottom: '28px' }}>
               <label style={labelStyle}>{lang === 'ko' ? '전화번호' : 'Phone'} <span style={{ color: '#c00' }}>*</span></label>
               <input name="phone" type="tel" value={form.phone} onChange={handleChange} required placeholder="010-0000-0000" style={inputStyle} />
             </div>
+
             <div style={{ marginBottom: '40px' }}>
               <label style={labelStyle}>{lang === 'ko' ? '문의 내용' : 'Message'} <span style={{ color: '#c00' }}>*</span></label>
-              <textarea name="message" value={form.message} onChange={handleChange} required placeholder={lang === 'ko' ? '문의 내용을 입력해 주세요.' : 'Please enter your message.'} rows={5}
-                style={{ ...inputStyle, resize: 'vertical', paddingTop: '12px' }} />
+              <textarea name="message" value={form.message} onChange={handleChange} required
+                placeholder={lang === 'ko' ? '문의 내용을 입력해 주세요.' : 'Please enter your message.'}
+                rows={5} style={{ ...inputStyle, resize: 'vertical', paddingTop: '12px' }} />
             </div>
+
             {error && <p style={{ color: '#c00', fontSize: '12px', marginBottom: '16px' }}>{error}</p>}
             <button type="submit" disabled={loading}
               style={{ width: '100%', padding: '16px', background: '#1a1a1a', color: '#fff', border: 'none', fontSize: '13px', letterSpacing: '.1em', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
-              {loading ? '전송 중...' : 'lang === 'ko' ? '문의 남기기' : 'Send Message''}
+              {loading ? '전송 중...' : (lang === 'ko' ? '문의 남기기' : 'Send Message')}
             </button>
           </form>
         )}
       </div>
     </>
   );
-}
+          }
